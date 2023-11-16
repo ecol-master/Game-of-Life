@@ -36,12 +36,12 @@ int **GenerateWorldCells(Config *config)
 int Next(World *world, int x, int y)
 {
     int n = Neighbours(world, x, y);
-    int alive = world->cells[x][y];
-    if (n < 4 & n > 1 & alive)
+    int alive = world->cells[y][x];
+    if (n < 4 && n > 1 && alive == 1)
     {
         return 1;
     }
-    if (n == 3 & !alive)
+    if (n == 3 && alive == 0)
     {
         return 1;
     }
@@ -50,48 +50,45 @@ int Next(World *world, int x, int y)
 
 int Neighbours(World *world, int x, int y)
 {
-    int neighs = 0;
-    int **newCells = calloc(3 * world->height, sizeof(int *));
-    for (int i = 0; i < 3 * world->height; i++)
+    int neightbours = 0;
+    for (int i = y - 1; i < y + 2; i++)
     {
-        newCells[i] = calloc(3 * world->width, sizeof(int *));
-    }
-    for (int i = 0; i < 3 * world->height; i++)
-    {
-        for (int j = 0; j < 3 * world->width; j++)
+        for (int j = x - 1; j < x + 2; j++)
         {
-            newCells[i][j] = world->cells[i % world->height][j % world->width];
-        }
-    }
-
-    for (int i = -1; i < 2; i++)
-    {
-        for (int j = -1; j < 2; j++)
-        {
-            if (i == j & i == 0)
+            if (i == y && j == x)
             {
                 continue;
             }
-            if (newCells[world->height + y + j][world->width + x + i])
+            if (i < 0 || j < 0 || i >= world->height || j >= world->width)
             {
-                neighs++;
+                continue;
+            }
+            if (world->cells[i][j] == 1)
+            {
+                neightbours++;
             }
         }
     }
-    return neighs;
+    return neightbours;
 }
 
-void NextState(World *oldWorld, World *newWorld)
+int **NextState(World *oldWorld, World *newWorld)
 {
-    // переберём все клетки, чтобы понять, в каком они состоянии
+    int **newCells = calloc(oldWorld->height, sizeof(int *));
     for (int i = 0; i < oldWorld->height; i++)
     {
-        for (int j = 0; j < oldWorld->width; j++)
+        newCells[i] = calloc(oldWorld->width, sizeof(int));
+    }
+
+    for (int y = 0; y < oldWorld->height; y++)
+    {
+        for (int x = 0; x < oldWorld->width; x++)
         {
             // для каждой клетки получим новое состояние
-            newWorld->cells[i][j] = Next(oldWorld, i, j);
+            newCells[y][x] = Next(oldWorld, x, y);
         }
     }
+    return newCells;
 }
 
 void PrintWorld(World *world)
